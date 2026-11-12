@@ -1,0 +1,53 @@
+# Local infrastructure for rag_cli.
+# Start:  docker compose up -d
+# Stop:   docker compose down        (data is kept in the named volumes)
+# Wipe:   docker compose down -v     (deletes the database too!)
+#
+# Credentials come from .env (Compose reads it automatically).
+
+name: rag_cli
+
+services:
+  # PostgreSQL with the pgvector extension preinstalled
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: rag-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"            # so Python on your Mac can reach it at localhost:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro   # enables pgvector on first start
+    healthcheck:
+      # "Is the database accepting connections yet?"
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Web UI for browsing the database: http://localhost:5050
+  pgadmin:
+    image: dpage/pgadmin4:9.19
+    container_name: rag-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: "False"                 # desktop mode: no login screen
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin                     # remembers saved passwords/settings
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json:ro   # preregisters our database
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  pgadmin_data:
