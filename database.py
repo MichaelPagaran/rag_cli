@@ -7,6 +7,11 @@ load_dotenv()
 
 DB_URL = os.getenv("DATABASE_URL")
 
+# The embedding model and its output size live together on purpose:
+# if you change the model, the vector(N) column below must change too.
+EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+EMBEDDING_DIM = 384
+
 def get_connection():
     # Connect to the database
     conn = psycopg.connect(DB_URL, autocommit=True)
@@ -19,12 +24,12 @@ def init_db():
     conn = get_connection()
     
     # Create a table for our document chunks
-    # We use vector(384) because our embedding model outputs 384 dimensions
-    conn.execute("""
+    # The vector size must match the embedding model's output (EMBEDDING_DIM)
+    conn.execute(f"""
         CREATE TABLE IF NOT EXISTS document_chunks (
             id SERIAL PRIMARY KEY,
             text_content TEXT NOT NULL,
-            embedding vector(384)
+            embedding vector({EMBEDDING_DIM})
         );
     """)
     print("Database table 'document_chunks' initialized successfully!")

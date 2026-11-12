@@ -1,11 +1,11 @@
 import os
 from sentence_transformers import SentenceTransformer
 from pypdf import PdfReader
-from database import get_connection
+from database import get_connection, EMBEDDING_MODEL
 
 # 1. Load the local embedding model (downloads automatically the first time)
 print("Loading embedding model...")
-model = SentenceTransformer('all-MiniLM-L6-v2')
+model = SentenceTransformer(EMBEDDING_MODEL)
 
 def extract_text_from_pdf(pdf_path):
     print(f"Extracting text from {pdf_path}...")
