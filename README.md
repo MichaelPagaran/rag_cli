@@ -20,7 +20,7 @@ PDF / Markdown ──► extract text ──► chunk ──► embed ──► 
 | --- | --- |
 | `database.py` | Connects to Postgres and creates the `document_chunks` table |
 | `ingest.py` | Extracts PDF text, chunks it, embeds it with `all-MiniLM-L6-v2`, and saves it |
-| `chat.py` | Query side: semantic search (in progress) |
+| `chat.py` | Interactive semantic search: ranks chunks by cosine similarity and shows the top 5 |
 
 ## Requirements
 - Python 3.9+
@@ -73,15 +73,21 @@ To check what was stored:
 psql rag_cli -c "SELECT id, left(text_content, 80) FROM document_chunks LIMIT 5;"
 ```
 
+To search by meaning, run the interactive search and type a question (`quit` to exit):
+
+```bash
+python chat.py
+```
+
 ## Roadmap
 - [x] PDF text extraction
 - [x] Fixed-size chunking
 - [x] Local embeddings with SentenceTransformers
 - [x] Storage in pgvector
+- [x] Cosine-similarity search in `chat.py`
 - [ ] Markdown input
 - [ ] Semantic chunking with overlap
 - [ ] Source metadata (file, page, chunk index)
-- [ ] Cosine-similarity search in `chat.py`
 - [ ] Vector index (HNSW) for faster search
 - [ ] Send retrieved chunks to an LLM to answer questions
 
